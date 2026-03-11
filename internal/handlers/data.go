@@ -38,6 +38,14 @@ func getCollectionOrAbort(c *gin.Context, projectId, collectionName string) *mod
 		return nil
 	}
 
+	if !project.IsActive {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Project is currently disabled"})
+		c.Abort()
+		return nil
+	}
+
+	collectionName = strings.ToLower(strings.TrimSpace(collectionName))
+
 	var collection models.Collection
 	if err := database.DB.Where("project_id = ? AND name = ?", project.ID, collectionName).First(&collection).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})

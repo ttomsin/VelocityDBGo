@@ -25,6 +25,7 @@ type Project struct {
 	Name        string         `gorm:"not null" json:"name"`
 	Description string         `json:"description,omitempty"`
 	APIKey      string         `gorm:"uniqueIndex;not null" json:"apiKey"` // Permanent key for client-side frontend apps
+	IsActive    bool           `gorm:"default:true" json:"isActive"`       // Can be disabled instead of deleted
 	Collections []Collection   `gorm:"foreignKey:ProjectID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"collections,omitempty"`
 	CreatedAt   time.Time      `json:"createdAt"`
 	UpdatedAt   time.Time      `json:"updatedAt"`
@@ -34,8 +35,8 @@ type Project struct {
 // Collection represents a virtual "table" within a Project
 type Collection struct {
 	ID        uint           `gorm:"primaryKey" json:"id"`
-	ProjectID uint           `gorm:"index;not null" json:"projectId"`
-	Name      string         `gorm:"not null" json:"name"` // e.g., "users", "products"
+	ProjectID uint           `gorm:"uniqueIndex:idx_project_name;index;not null" json:"projectId"`
+	Name      string         `gorm:"uniqueIndex:idx_project_name;not null" json:"name"` // e.g., "users", "products"
 	Documents []Document     `gorm:"foreignKey:CollectionID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`

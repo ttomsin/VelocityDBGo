@@ -42,17 +42,18 @@ async function fetchProjects() {
         list.innerHTML = '';
         
         if(projects.length > 0 && !currentProjectId) {
-            selectProject(projects[0].id, projects[0].name, projects[0].apiKey);
+            selectProject(projects[0].id, projects[0].name, projects[0].apiKey, projects[0].isActive);
         }
 
         projects.forEach(p => {
             const isActive = p.id === currentProjectId;
+            const statusIcon = p.isActive ? '' : '<i class="fa-solid fa-ban text-red-400 ml-1" title="Disabled"></i>';
             list.innerHTML += `
                 <li>
-                    <button onclick="selectProject(${p.id}, '${p.name}', '${p.apiKey}')" 
+                    <button onclick="selectProject(${p.id}, '${p.name}', '${p.apiKey}', ${p.isActive})" 
                         class="w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-3
                         ${isActive ? 'bg-indigo-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}">
-                        <i class="fa-solid fa-folder${isActive ? '-open' : ''}"></i> ${p.name}
+                        <i class="fa-solid fa-folder${isActive ? '-open' : ''}"></i> ${p.name} ${statusIcon}
                     </button>
                 </li>
             `;
@@ -74,16 +75,49 @@ async function createProject(e) {
     } catch (err) { alert(err.message); }
 }
 
-function selectProject(id, name, apiKey) {
+let isProjectActive = true;
+function selectProject(id, name, apiKey, isActive) {
     currentProjectId = id;
     currentProjectApiKey = apiKey;
+    isProjectActive = isActive;
     
     document.getElementById('header-title').innerText = name;
-    document.getElementById('api-key-box').classList.remove('hidden');
+    document.getElementById('project-actions').classList.remove('hidden');
     document.getElementById('api-key-display').innerText = apiKey;
+
+    const badge = document.getElementById('project-status-badge');
+    badge.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+    
+    const toggleBtn = document.getElementById('toggle-project-btn');
+    toggleBtn.classList.remove('bg-red-50', 'text-red-600', 'hover:bg-red-100', 'bg-green-50', 'text-green-600', 'hover:bg-green-100');
+
+    if (isActive) {
+        badge.innerText = 'Active';
+        badge.classList.add('bg-green-100', 'text-green-700');
+        toggleBtn.innerHTML = '<i class="fa-solid fa-ban"></i> Disable';
+        toggleBtn.classList.add('bg-red-50', 'text-red-600', 'hover:bg-red-100');
+    } else {
+        badge.innerText = 'Disabled';
+        badge.classList.add('bg-red-100', 'text-red-700');
+        toggleBtn.innerHTML = '<i class="fa-solid fa-check"></i> Enable';
+        toggleBtn.classList.add('bg-green-50', 'text-green-600', 'hover:bg-green-100');
+    }
     
     fetchProjects(); // Update active state in sidebar
     showCollections();
+}
+
+async function toggleProjectStatus() {
+    try {
+        const newStatus = !isProjectActive;
+        const res = await api(`/api/projects/${currentProjectId}/status`, { 
+            method: 'PATCH', 
+            body: JSON.stringify({ isActive: newStatus }) 
+        });
+        
+        isProjectActive = newStatus;
+        selectProject(currentProjectId, document.getElementById('header-title').innerText, currentProjectApiKey, newStatus);
+    } catch (e) { alert(e.message); }
 }
 
 function copyApiKey() {
@@ -109,15 +143,17 @@ async function showCollections() {
 
         collections.forEach(c => {
             grid.innerHTML += `
-                <div class="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md cursor-pointer transition flex items-center justify-between" onclick="viewData('${c.name}')">
-                    <div class="flex items-center gap-3">
+                <div class="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition flex items-center justify-between group">
+                    <div class="flex items-center gap-3 cursor-pointer flex-1" onclick="viewData('${c.name}')">
                         <div class="bg-indigo-50 text-indigo-600 p-3 rounded-lg"><i class="fa-solid fa-table"></i></div>
                         <div>
                             <h4 class="font-bold text-gray-800">${c.name}</h4>
                             <p class="text-xs text-gray-500">Virtual Table</p>
                         </div>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-gray-300"></i>
+                    <button onclick="deleteCollection('${c.name}')" class="text-red-400 hover:text-red-600 p-2 opacity-0 group-hover:opacity-100 transition" title="Delete Collection">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
                 </div>
             `;
         });
@@ -131,6 +167,14 @@ async function createCollection(e) {
         await api(`/api/projects/${currentProjectId}/collections`, { method: 'POST', body: JSON.stringify({ name }) });
         closeModal('collectionModal');
         e.target.reset();
+        showCollections();
+    } catch (err) { alert(err.message); }
+}
+
+async function deleteCollection(name) {
+    if(!confirm(`WARNING: This will delete the collection "${name}" and ALL data inside it. Are you sure?`)) return;
+    try {
+        await api(`/api/projects/${currentProjectId}/collections/${name}`, { method: 'DELETE' });
         showCollections();
     } catch (err) { alert(err.message); }
 }

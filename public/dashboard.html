@@ -52,15 +52,21 @@
         <!-- Header -->
         <header class="bg-white border-b border-gray-200 px-8 py-5 flex justify-between items-center z-10">
             <div>
-                <h1 id="header-title" class="text-2xl font-bold text-gray-800">Select a Project</h1>
+                <div class="flex items-center gap-3">
+                    <h1 id="header-title" class="text-2xl font-bold text-gray-800">Select a Project</h1>
+                    <span id="project-status-badge" class="hidden text-xs font-bold px-2 py-1 rounded-full"></span>
+                </div>
                 <p id="header-desc" class="text-sm text-gray-500 mt-1">Manage your database collections</p>
             </div>
-            <div id="api-key-box" class="hidden flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2">
-                <span class="text-xs text-gray-500 font-bold uppercase">Project API Key</span>
-                <code id="api-key-display" class="text-sm text-indigo-600 font-mono"></code>
-                <button onclick="copyApiKey()" class="text-gray-400 hover:text-indigo-600 ml-2" title="Copy Key">
-                    <i class="fa-regular fa-copy"></i>
-                </button>
+            <div id="project-actions" class="hidden flex items-center gap-4">
+                <button id="toggle-project-btn" onclick="toggleProjectStatus()" class="text-sm font-medium px-4 py-2 rounded-lg transition"></button>
+                <div id="api-key-box" class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2">
+                    <span class="text-xs text-gray-500 font-bold uppercase">Project API Key</span>
+                    <code id="api-key-display" class="text-sm text-indigo-600 font-mono"></code>
+                    <button onclick="copyApiKey()" class="text-gray-400 hover:text-indigo-600 ml-2" title="Copy Key">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
             </div>
         </header>
 

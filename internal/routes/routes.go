@@ -32,10 +32,12 @@ func SetupRoutes(r *gin.Engine) {
 		// Projects
 		protected.POST("/projects", handlers.CreateProject)
 		protected.GET("/projects", handlers.GetProjects)
+		protected.PATCH("/projects/:projectId/status", handlers.UpdateProjectStatus)
 
 		// Collections within a project
 		protected.POST("/projects/:projectId/collections", handlers.CreateCollection)
 		protected.GET("/projects/:projectId/collections", handlers.GetCollections)
+		protected.DELETE("/projects/:projectId/collections/:collectionName", handlers.DeleteCollection)
 	}
 
 	// Data API routes (can be accessed via Developer JWT OR Project API Key)

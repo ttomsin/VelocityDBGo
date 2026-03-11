@@ -60,6 +60,11 @@ definitions:
     - email
     - password
     type: object
+  handlers.UpdateProjectStatusRequest:
+    properties:
+      isActive:
+        type: boolean
+    type: object
   models.Collection:
     properties:
       createdAt:
@@ -89,6 +94,9 @@ definitions:
         type: string
       id:
         type: integer
+      isActive:
+        description: Can be disabled instead of deleted
+        type: boolean
       name:
         type: string
       updatedAt:
@@ -325,6 +333,53 @@ paths:
       security:
       - BearerAuth: []
       summary: Create a new collection
+      tags:
+      - Collections
+  /api/projects/{projectId}/collections/{collectionName}:
+    delete:
+      description: Delete an entire collection and all its associated documents
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Collection Name
+        in: path
+        name: collectionName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a collection
       tags:
       - Collections
   /api/projects/{projectId}/data/{collectionName}:
@@ -687,6 +742,62 @@ paths:
       summary: Query documents via JSON
       tags:
       - Data
+  /api/projects/{projectId}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Toggle whether a project is active or disabled (soft delete). Disabled
+        projects cannot accept Data API queries.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Status parameter
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateProjectStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Enable/Disable a project
+      tags:
+      - Projects
 securityDefinitions:
   ApiKeyAuth:
     description: Public API Key for a specific Project.
