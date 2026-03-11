@@ -2,7 +2,9 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
+	"time"
 
 	"VelocityDBGo/internal/database"
 	"VelocityDBGo/internal/routes"
@@ -61,6 +63,9 @@ func main() {
 	// Setup routes
 	routes.SetupRoutes(r)
 
+	// Start self-pinging background worker (to keep Render free tier awake)
+	go startSelfPing()
+
 	// Start server
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -70,5 +75,27 @@ func main() {
 	log.Printf("Starting VelocityDBGo on port %s...", port)
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
+	}
+}
+
+func startSelfPing() {
+	appURL := os.Getenv("APP_URL")
+	if appURL == "" {
+		log.Println("APP_URL not set, self-pinging disabled.")
+		return
+	}
+
+	// Ping every 14 minutes (Render sleeps after 15 mins of inactivity)
+	ticker := time.NewTicker(14 * time.Minute)
+	log.Printf("Self-pinging background worker started for: %s/health", appURL)
+
+	for range ticker.C {
+		resp, err := http.Get(appURL + "/health")
+		if err != nil {
+			log.Printf("Self-ping failed: %v", err)
+			continue
+		}
+		resp.Body.Close()
+		log.Printf("Self-ping successful: %s", resp.Status)
 	}
 }

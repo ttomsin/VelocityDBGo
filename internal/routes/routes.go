@@ -14,6 +14,11 @@ func SetupRoutes(r *gin.Engine) {
 	// Swagger documentation route
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// Health check endpoint (used for keeping the app awake)
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "alive"})
+	})
+
 	// Frontend Dashboard routes
 	r.Static("/assets", "./public/assets")
 	r.StaticFile("/", "./public/index.html")
