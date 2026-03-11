@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation | VelocityDBGo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        pre { background-color: #1f2937; color: #f3f4f6; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; font-family: monospace; font-size: 0.875rem; margin-top: 1rem; margin-bottom: 1.5rem; }
+        code { background-color: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.875rem; color: #db2777; }
+        pre code { background-color: transparent; padding: 0; color: inherit; }
+        .prose h1 { font-size: 2.25rem; font-weight: 800; margin-bottom: 1.5rem; color: #111827; }
+        .prose h2 { font-size: 1.5rem; font-weight: 700; margin-top: 2.5rem; margin-bottom: 1rem; color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; }
+        .prose h3 { font-size: 1.25rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; color: #374151; }
+        .prose p { margin-bottom: 1rem; color: #4b5563; line-height: 1.6; }
+        .prose ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; color: #4b5563; }
+        .prose li { margin-bottom: 0.5rem; }
+        .prose a { color: #4f46e5; text-decoration: none; font-weight: 500; }
+        .prose a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body class="bg-white font-sans text-gray-900 flex flex-col h-screen">
+
+    <!-- Navigation -->
+    <nav class="bg-gray-900 text-white shadow-md flex-none z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
+            <a href="/" class="flex items-center gap-2 text-xl font-bold">
+                <i class="fa-solid fa-database text-indigo-400"></i>
+                VelocityDBGo Docs
+            </a>
+            <div class="flex items-center gap-4">
+                <a href="/swagger/index.html" class="text-gray-300 hover:text-white transition">Swagger UI</a>
+                <a href="/auth" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                    Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="flex flex-1 overflow-hidden max-w-7xl mx-auto w-full">
+        
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-50 border-r border-gray-200 overflow-y-auto hidden md:block flex-none py-6 px-4">
+            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-2">Getting Started</h4>
+            <ul class="space-y-1 mb-8">
+                <li><a href="#intro" class="block px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-200 rounded transition font-medium text-indigo-600 bg-indigo-50">Introduction</a></li>
+                <li><a href="#auth" class="block px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-200 hover:text-gray-900 rounded transition">Authentication</a></li>
+            </ul>
+
+            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-2">Data API</h4>
+            <ul class="space-y-1 mb-8">
+                <li><a href="#insert" class="block px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-200 hover:text-gray-900 rounded transition">Insert Data</a></li>
+                <li><a href="#query-url" class="block px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-200 hover:text-gray-900 rounded transition">Query via URL</a></li>
+                <li><a href="#query-json" class="block px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-200 hover:text-gray-900 rounded transition">Query via JSON</a></li>
+                <li><a href="#update" class="block px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-200 hover:text-gray-900 rounded transition">Update Data</a></li>
+                <li><a href="#delete" class="block px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-200 hover:text-gray-900 rounded transition">Delete Data</a></li>
+            </ul>
+        </aside>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6 md:p-10 lg:p-12 prose max-w-none">
+            
+            <section id="intro">
+                <h1>VelocityDBGo Documentation</h1>
+                <p>Welcome! VelocityDBGo is a dynamic Backend-as-a-Service (BaaS). It lets you build your frontend web or mobile applications instantly without having to code a backend server, setup a SQL database, or worry about migrations.</p>
+                <p>Just create a <strong>Project</strong>, generate an <strong>API Key</strong>, and start sending JSON data directly from your app.</p>
+            </section>
+
+            <section id="auth">
+                <h2>Authentication (API Keys)</h2>
+                <p>To access the Data API from your client-side application (like React, Vue, or Vanilla JS), you must use your Project's permanent API Key.</p>
+                <p>You can find this key by logging into the <a href="/auth">Dashboard</a> and selecting your project.</p>
+                <p>Include the key in the HTTP headers of every fetch request:</p>
+<pre>
+fetch('http://localhost:8080/api/projects/1/data/users', {
+  headers: {
+    'Content-Type': 'application/json',
+    'X-API-Key': 'YOUR-API-KEY-HERE'
+  }
+})
+</pre>
+            </section>
+
+            <section id="insert">
+                <h2>1. Insert Data (Create)</h2>
+                <p>To store data, simply <code>POST</code> an arbitrary JSON object to your collection endpoint. The collection is created virtually on the fly.</p>
+                <h3>Endpoint</h3>
+                <p><code>POST /api/projects/{projectId}/data/{collectionName}</code></p>
+                <h3>Example</h3>
+<pre>
+const response = await fetch('/api/projects/1/data/restaurants', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'X-API-Key': 'YOUR-API-KEY' },
+  body: JSON.stringify({
+    name: "Pizza Palace",
+    rating: 4.8,
+    location: { city: "New York" }
+  })
+});
+</pre>
+            </section>
+
+            <section id="query-url">
+                <h2>2. Query via URL (Read & Filter)</h2>
+                <p>You can retrieve and filter your data using intuitive URL query parameters.</p>
+                <h3>Endpoint</h3>
+                <p><code>GET /api/projects/{projectId}/data/{collectionName}?key=value</code></p>
+                
+                <h3>Supported Operators</h3>
+                <ul>
+                    <li><code>eq:</code> (Equals) - Default if no prefix is given. e.g., <code>?status=active</code></li>
+                    <li><code>neq:</code> (Not Equals) - e.g., <code>?status=neq:closed</code></li>
+                    <li><code>gt:</code> (Greater Than) - e.g., <code>?rating=gt:4</code></li>
+                    <li><code>gte:</code> (Greater or Equal) - e.g., <code>?rating=gte:4.5</code></li>
+                    <li><code>lt:</code> (Less Than) - e.g., <code>?price=lt:100</code></li>
+                    <li><code>lte:</code> (Less or Equal) - e.g., <code>?price=lte:100</code></li>
+                    <li><code>like:</code> (Fuzzy Search/Contains) - Case insensitive. e.g., <code>?name=like:pizza</code></li>
+                </ul>
+
+                <h3>Nested Lookups, Sorting & Pagination</h3>
+                <p>Use dot notation for nested JSON fields: <code>?location.city=New York</code></p>
+                <p>Sort: <code>?sort=rating:desc</code> or <code>?sort=name:asc</code></p>
+                <p>Pagination: <code>?limit=10&offset=0</code></p>
+            </section>
+
+            <section id="query-json">
+                <h2>3. Query via JSON (Advanced)</h2>
+                <p>If your URL queries become too long, or you prefer a structured approach in your code, you can use the <code>POST /query</code> endpoint.</p>
+                <h3>Endpoint</h3>
+                <p><code>POST /api/projects/{projectId}/data/{collectionName}/query</code></p>
+                <h3>Example Payload</h3>
+<pre>
+{
+  "filter": {
+    "location.city": "New York",
+    "rating": "gte:4.5"
+  },
+  "sort": "rating:desc",
+  "limit": 10
+}
+</pre>
+            </section>
+
+            <section id="update">
+                <h2>4. Update Data (Replace)</h2>
+                <p>Fully replace the JSON payload of an existing document using its ID.</p>
+                <h3>Endpoint</h3>
+                <p><code>PUT /api/projects/{projectId}/data/{collectionName}/{docId}</code></p>
+                <h3>Example</h3>
+<pre>
+const response = await fetch('/api/projects/1/data/restaurants/5', {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json', 'X-API-Key': 'YOUR-API-KEY' },
+  body: JSON.stringify({
+    name: "Pizza Palace (Updated)",
+    rating: 5.0
+  })
+});
+</pre>
+            </section>
+
+            <section id="delete">
+                <h2>5. Delete Data</h2>
+                <p>Remove a specific document from a collection.</p>
+                <h3>Endpoint</h3>
+                <p><code>DELETE /api/projects/{projectId}/data/{collectionName}/{docId}</code></p>
+                <p>Returns a 200 OK message upon successful deletion.</p>
+            </section>
+
+        </main>
+    </div>
+
+</body>
+</html>

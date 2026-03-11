@@ -8,7 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script>
         if (!localStorage.getItem("token")) {
-            window.location.href = "/";
+            window.location.href = "/auth";
         }
     </script>
 </head>
@@ -17,9 +17,9 @@
     <!-- Sidebar -->
     <aside class="w-64 bg-gray-900 text-white flex flex-col h-full border-r border-gray-800">
         <div class="p-6 border-b border-gray-800 flex items-center justify-between">
-            <div class="text-xl font-bold flex items-center gap-2">
+            <a href="/" class="text-xl font-bold flex items-center gap-2 hover:text-indigo-400 transition">
                 <i class="fa-solid fa-database text-indigo-400"></i> VelocityDB
-            </div>
+            </a>
         </div>
 
         <div class="p-4 flex-1 overflow-y-auto">
@@ -35,6 +35,9 @@
         </div>
 
         <div class="p-4 border-t border-gray-800 space-y-2">
+            <a href="/docs" target="_blank" class="w-full flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition">
+                <i class="fa-solid fa-book"></i> Documentation
+            </a>
             <button onclick="openModal('aiPromptModal')" class="w-full flex items-center gap-2 px-4 py-2 text-indigo-300 hover:text-white hover:bg-gray-800 rounded-lg transition">
                 <i class="fa-solid fa-robot"></i> Copy AI Prompt
             </button>

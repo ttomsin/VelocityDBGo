@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Auth
 function logout() {
     localStorage.removeItem('token');
-    window.location.href = '/';
+    window.location.href = '/auth';
 }
 
 // API Helpers

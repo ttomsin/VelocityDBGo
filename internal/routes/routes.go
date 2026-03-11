@@ -17,7 +17,9 @@ func SetupRoutes(r *gin.Engine) {
 	// Frontend Dashboard routes
 	r.Static("/assets", "./public/assets")
 	r.StaticFile("/", "./public/index.html")
+	r.StaticFile("/auth", "./public/auth.html")
 	r.StaticFile("/dashboard", "./public/dashboard.html")
+	r.StaticFile("/docs", "./public/docs.html")
 
 	// Public routes
 	r.POST("/api/auth/signup", handlers.Signup)
