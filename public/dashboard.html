@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | VelocityDBGo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        if (!localStorage.getItem("token")) {
+            window.location.href = "/";
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-900 text-white flex flex-col h-full border-r border-gray-800">
+        <div class="p-6 border-b border-gray-800 flex items-center justify-between">
+            <div class="text-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-database text-indigo-400"></i> VelocityDB
+            </div>
+        </div>
+
+        <div class="p-4 flex-1 overflow-y-auto">
+            <div class="text-xs uppercase text-gray-400 font-semibold tracking-wider mb-3 px-2 flex justify-between items-center">
+                Projects
+                <button onclick="openModal('projectModal')" class="hover:text-white" title="New Project">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+            <ul id="projects-list" class="space-y-1">
+                <!-- Projects injected here -->
+            </ul>
+        </div>
+
+        <div class="p-4 border-t border-gray-800 space-y-2">
+            <button onclick="openModal('aiPromptModal')" class="w-full flex items-center gap-2 px-4 py-2 text-indigo-300 hover:text-white hover:bg-gray-800 rounded-lg transition">
+                <i class="fa-solid fa-robot"></i> Copy AI Prompt
+            </button>
+            <button onclick="logout()" class="w-full flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition">
+                <i class="fa-solid fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full bg-white relative">
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 px-8 py-5 flex justify-between items-center z-10">
+            <div>
+                <h1 id="header-title" class="text-2xl font-bold text-gray-800">Select a Project</h1>
+                <p id="header-desc" class="text-sm text-gray-500 mt-1">Manage your database collections</p>
+            </div>
+            <div id="api-key-box" class="hidden flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2">
+                <span class="text-xs text-gray-500 font-bold uppercase">Project API Key</span>
+                <code id="api-key-display" class="text-sm text-indigo-600 font-mono"></code>
+                <button onclick="copyApiKey()" class="text-gray-400 hover:text-indigo-600 ml-2" title="Copy Key">
+                    <i class="fa-regular fa-copy"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Dynamic View Area -->
+        <div id="main-view" class="flex-1 overflow-y-auto p-8 bg-gray-50">
+            <!-- Placeholder -->
+            <div id="empty-state" class="h-full flex flex-col items-center justify-center text-gray-400">
+                <i class="fa-solid fa-box-open text-6xl mb-4 text-gray-300"></i>
+                <h2 class="text-xl font-medium text-gray-500">No Project Selected</h2>
+                <p class="text-sm mt-2">Create or select a project from the sidebar to get started.</p>
+            </div>
+
+            <!-- Collections View -->
+            <div id="collections-view" class="hidden h-full flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-gray-800">Collections</h3>
+                    <button onclick="openModal('collectionModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> New Collection
+                    </button>
+                </div>
+                <div id="collections-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Collections injected here -->
+                </div>
+            </div>
+
+            <!-- Data Explorer View -->
+            <div id="data-view" class="hidden h-full flex flex-col">
+                <div class="flex items-center gap-4 mb-6">
+                    <button onclick="showCollections()" class="text-gray-500 hover:text-indigo-600 transition">
+                        <i class="fa-solid fa-arrow-left"></i> Back
+                    </button>
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-table text-indigo-500"></i> <span id="current-collection-name"></span>
+                    </h3>
+                    <div class="ml-auto">
+                        <button onclick="openModal('documentModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Add Document
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Query Builder -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-4 p-4 flex flex-wrap gap-4 items-end">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Field Name (e.g., age, user.name)</label>
+                        <input type="text" id="filter-field" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Field name">
+                    </div>
+                    <div class="w-32">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Operator</label>
+                        <select id="filter-operator" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                            <option value="eq:">Equals (=)</option>
+                            <option value="neq:">Not Equals (!=)</option>
+                            <option value="gt:">Greater Than (&gt;)</option>
+                            <option value="gte:">Greater/Equal (&gt;=)</option>
+                            <option value="lt:">Less Than (&lt;)</option>
+                            <option value="lte:">Less/Equal (&lt;=)</option>
+                            <option value="like:">Contains (LIKE)</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Value</label>
+                        <input type="text" id="filter-value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Value to search">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="applyFilter()" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-filter"></i> Filter
+                        </button>
+                        <button onclick="clearFilter()" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                            <i class="fa-solid fa-times"></i> Clear
+                        </button>
+                        <button onclick="copyJsonQuery()" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2" title="Copy the JSON payload for the POST /query endpoint">
+                            <i class="fa-solid fa-code"></i> Copy JSON Query
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 flex flex-col">
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
+                                <tr>
+                                    <th class="px-6 py-3 border-b border-gray-200 w-32">ID</th>
+                                    <th class="px-6 py-3 border-b border-gray-200">JSON Data</th>
+                                    <th class="px-6 py-3 border-b border-gray-200 w-24 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="data-table-body" class="divide-y divide-gray-200 text-sm">
+                                <!-- Data rows injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <!-- New Project Modal -->
+    <div id="projectModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Create New Project</h2>
+            <form onsubmit="createProject(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+                    <input type="text" id="proj-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Foodie App" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                    <input type="text" id="proj-desc" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="My awesome delivery app">
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('projectModal')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- New Collection Modal -->
+    <div id="collectionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Create New Collection</h2>
+            <form onsubmit="createCollection(event)">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Collection Name</label>
+                    <input type="text" id="coll-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. users, products" pattern="[a-zA-Z0-9_]+" title="Only alphanumeric and underscores allowed" required>
+                    <p class="text-xs text-gray-500 mt-1">Creates a virtual table for JSON documents.</p>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('collectionModal')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Document Modal -->
+    <div id="documentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Insert JSON Document</h2>
+            <form onsubmit="insertDocument(event)">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">JSON Payload</label>
+                    <textarea id="doc-json" rows="10" class="w-full font-mono text-sm px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50" placeholder='{"name": "John Doe", "age": 25}' required></textarea>
+                    <p id="json-error" class="text-xs text-red-500 mt-1 hidden">Invalid JSON format</p>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('documentModal')" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Insert</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI Prompt Modal -->
+    <div id="aiPromptModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-6 h-[90vh] flex flex-col">
+            <h2 class="text-xl font-bold mb-2 text-gray-800 flex items-center gap-2"><i class="fa-solid fa-robot text-indigo-600"></i> AI Developer Prompt</h2>
+            <p class="text-sm text-gray-500 mb-4">Copy this documentation and paste it into ChatGPT, Claude, or any AI assistant. It teaches the AI exactly how to use VelocityDBGo to build your frontend instantly!</p>
+            
+            <div class="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-1 relative mb-4">
+                <textarea id="ai-prompt-content" class="w-full h-full bg-transparent p-4 text-sm font-mono text-gray-700 focus:outline-none resize-none" readonly>You are an expert Frontend Developer. We are building a client-side application (React, Vue, Vanilla JS, etc.) that uses "VelocityDBGo" as its Backend-as-a-Service (BaaS).
+
+VelocityDBGo is a NoSQL-like JSON document store backed by PostgreSQL JSONB.
+
+Here is the exact API documentation you MUST use to interact with the backend.
+
+### Authentication
+Do NOT use a JWT login. Our frontend uses a permanent "Project API Key".
+You must include this header in EVERY fetch request to the data API:
+`X-API-Key: YOUR_API_KEY_HERE`
+
+### Base URL
+Assume the API is hosted at: `http://localhost:8080` (or another domain if specified).
+The base path for all data operations is: `/api/projects/{projectId}/data/{collectionName}`
+
+### 1. Insert a Document (Create)
+Method: POST
+Path: `/api/projects/{projectId}/data/{collectionName}`
+Body: Any JSON object.
+Response: `{"message": "Document inserted", "id": 1, "data": {...}}`
+
+### 2. Retrieve Documents (Read & Filter)
+Method: GET
+Path: `/api/projects/{projectId}/data/{collectionName}`
+
+You can pass query parameters to filter the JSON data!
+Supported Operators (prefix your value with these):
+- `eq:` (Equals) -> `?status=active` (default is eq)
+- `neq:` (Not Equals) -> `?status=neq:closed`
+- `gt:` (Greater Than) -> `?rating=gt:4`
+- `gte:` (Greater/Equal) -> `?rating=gte:4`
+- `lt:` (Less Than) -> `?price=lt:100`
+- `lte:` (Less/Equal) -> `?price=lte:100`
+- `like:` (Fuzzy Search) -> `?name=like:pizza`
+
+Nested JSON Lookups: Use dot notation!
+Example: `?address.city=London` or `?founder.age=gt:40`
+
+Sorting & Pagination:
+- `?sort=rating:desc` or `?sort=name:asc`
+- `?limit=10&offset=0`
+
+### 3. Retrieve a Single Document
+Method: GET
+Path: `/api/projects/{projectId}/data/{collectionName}/{docId}`
+Response: Returns the exact JSON object with `_id` injected.
+
+### 4. Update/Replace a Document (Update)
+Method: PUT
+Path: `/api/projects/{projectId}/data/{collectionName}/{docId}`
+Body: The complete updated JSON object. (This fully replaces the old document).
+
+### 5. Delete a Document (Delete)
+Method: DELETE
+Path: `/api/projects/{projectId}/data/{collectionName}/{docId}`
+Response: `{"message": "Document deleted"}`
+
+### 6. Complex JSON Querying (Optional)
+If URL parameters are too complex, you can POST a query object.
+Method: POST
+Path: `/api/projects/{projectId}/data/{collectionName}/query`
+Body Example:
+{
+  "filter": { "location.city": "London", "age": "gte:18" },
+  "sort": "age:desc",
+  "limit": 10
+}
+
+### Your Task:
+When I ask you to build a feature, write the exact frontend code (fetch requests, state management, UI) assuming the above API rules. Always use `X-API-Key` for headers.</textarea>
+                <button onclick="copyAiPrompt()" class="absolute top-2 right-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs font-bold shadow-md transition flex items-center gap-1">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="button" onclick="closeModal('aiPromptModal')" class="px-5 py-2.5 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 rounded-lg transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/dashboard.js"></script>
+</body>
+</html>
